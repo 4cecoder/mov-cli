@@ -60,3 +60,11 @@ def image(id: str):
 
     # else:
     #    call(["fzf-preview.sh", image_url])
+
+@test_app.command(help = "Automatically tests the **entire** plugin for faults.")
+def plugin(
+    plugin_name: str = typer.Argument(help = "The name of the plugin to test."), 
+    query: str = typer.Argument("*", help = "The query to use if searching is being tested.")
+):
+    # NOTE: I'll be using a series of pytest tests here.
+    ...
