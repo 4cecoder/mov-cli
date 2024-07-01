@@ -50,9 +50,8 @@ class Download():
             ]
 
             if self.config.debug is False:
-                args.append("--quiet")
-                args.append("--progress")
-
+                args.append("--no-warnings")
+    
             if media.referrer is not None:
                 args.extend(["--add-header", f"Referer:{media.referrer}"])
 
