@@ -70,7 +70,8 @@ async def search(data: models.SearchModel) -> List[models.MetadataModel]:
         {
             "watch_url": result.id, 
             "title": result.title, 
-            "type": result.type.value
+            "type": result.type.value,
+            "image_url": result.image_url
         } for result in search_results
     ]
 

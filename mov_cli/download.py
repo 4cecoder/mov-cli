@@ -45,12 +45,13 @@ class Download():
                 "-o", 
                 file_path,
                 "--downloader", 
-                "ffmpeg", 
-                "--hls-use-mpegts"
+                "ffmpeg",
+                "--hls-use-mpegts",
             ]
 
             if self.config.debug is False:
                 args.append("--quiet")
+                args.append("--progress")
 
             if media.referrer is not None:
                 args.extend(["--add-header", f"Referer:{media.referrer}"])

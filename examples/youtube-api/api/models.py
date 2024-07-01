@@ -21,6 +21,7 @@ class MetadataModel(BaseModel):
     watch_url: str
     title: str
     type: int
+    image_url: Optional[str]
 
 class StreamResultModel(BaseModel):
     url: str

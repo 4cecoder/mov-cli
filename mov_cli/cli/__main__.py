@@ -39,7 +39,8 @@ def mov_cli(
     auto_select: Optional[int] = typer.Option(None, "--choice", "-c", help = "Auto select the search results. E.g. Setting it to 1 with query 'nyan cat' will pick " \
         "the first nyan cat video to show up in search results."
     ), 
-    limit: Optional[int] = typer.Option(None, "--limit", "-l", help = "Specify the maximum number of results"), 
+    limit: Optional[int] = typer.Option(None, "--limit", "-l", help = "Specify the maximum number of results"),
+    _range: Optional[str] = typer.Option(None, "--range", "-r", help = "Specify the episodes which get scraped after the download/stream finishes. E.g. {episode}:{episode} 1-5"),
 
     version: bool = typer.Option(False, "--version", help = "Display what version mov-cli is currently on."), 
     edit: bool = typer.Option(False, "--edit", "-e", help = "Opens the mov-cli config with your respective editor."), 
@@ -57,7 +58,8 @@ def mov_cli(
         scraper = (scraper, ["scrapers", "default"]), 
         fzf = (fzf, ["ui", "fzf"]), 
         preview = (preview, ["ui", "preview"]), 
-        limit = (limit, ["ui", "limit"])
+        limit = (limit, ["ui", "limit"]),
+        watch_options = (False if _range else None, ["ui", "watch_options"])
     )
 
     if config.debug:
@@ -128,39 +130,66 @@ def mov_cli(
             return False
 
         chosen_episode = handle_episode(
-            episode_string = episode, 
-            scraper = chosen_scraper, 
+            episode_string = episode,
+            _range = _range,
+            scraper = chosen_scraper,
             choice = choice, 
-            fzf_enabled = config.fzf_enabled
+            fzf_enabled = config.fzf_enabled,
         )
 
         if chosen_episode is None:
             mov_cli_logger.error("You didn't select a season/episode.")
             return False
+        
+        if isinstance(chosen_episode, list):
+            for selector in chosen_episode:
+                media = scrape(choice, selector, chosen_scraper)
 
-        media = scrape(choice, chosen_episode, chosen_scraper)
+                if media is None:
+                    episode_details_string = f" ep {selector.episode} season {selector.season} of" if choice.type == MetadataType.MULTI else ""
 
-        if media is None:
-            episode_details_string = f" ep {chosen_episode.episode} season {chosen_episode.season} of" if choice.type == MetadataType.MULTI else ""
+                    mov_cli_logger.error(
+                        f"The scraper '{chosen_scraper.__class__.__name__}' couldn't find{episode_details_string} '{choice.title}'! " \
+                            "Don't report this to mov-cli, report this to the plugin itself."
+                    )
+                    return False
 
-            mov_cli_logger.error(
-                f"The scraper '{chosen_scraper.__class__.__name__}' couldn't find{episode_details_string} '{choice.title}'! " \
-                    "Don't report this to mov-cli, report this to the plugin itself."
-            )
-            return False
+                if download:
+                    dl = Download(config)
 
-        if download:
-            dl = Download(config)
+                    mov_cli_logger.debug(f"Downloading from this url -> '{hide_ip(media.url, config.hide_ip)}'")
 
-            mov_cli_logger.debug(f"Downloading from this url -> '{hide_ip(media.url, config.hide_ip)}'")
+                    popen = dl.download(media)
+                    
+                    if popen:
+                        popen.wait()
 
-            popen = dl.download(media)
-            
-            if popen:
-                popen.wait()
-
+                else:
+                    play(media, choice, chosen_scraper, selector, config)
         else:
-            play(media, choice, chosen_scraper, chosen_episode, config)
+            media = scrape(choice, chosen_episode, chosen_scraper)
+
+            if media is None:
+                episode_details_string = f" ep {chosen_episode.episode} season {chosen_episode.season} of" if choice.type == MetadataType.MULTI else ""
+
+                mov_cli_logger.error(
+                    f"The scraper '{chosen_scraper.__class__.__name__}' couldn't find{episode_details_string} '{choice.title}'! " \
+                        "Don't report this to mov-cli, report this to the plugin itself."
+                )
+                return False
+
+            if download:
+                dl = Download(config)
+
+                mov_cli_logger.debug(f"Downloading from this url -> '{hide_ip(media.url, config.hide_ip)}'")
+
+                popen = dl.download(media)
+                
+                if popen:
+                    popen.wait()
+
+            else:
+                play(media, choice, chosen_scraper, chosen_episode, config)
 
 def app():
     uwu_app.command()(mov_cli)
