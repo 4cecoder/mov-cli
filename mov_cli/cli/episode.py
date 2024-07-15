@@ -16,23 +16,31 @@ from ..logger import mov_cli_logger
 
 def handle_episode(
     episode_string: Optional[str], 
-    _range: Optional[str], 
+    range_string: Optional[str], 
     scraper: Scraper, 
     choice: Metadata, 
     fzf_enabled: bool
-    ) -> Optional[List[EpisodeSelector] | EpisodeSelector]:
+) -> Optional[List[EpisodeSelector] | EpisodeSelector]:
+
     if choice.type == MetadataType.SINGLE:
         return EpisodeSelector()
 
     metadata_episodes = scraper.scrape_episodes(choice)
 
-    if _range is not None:
+    if range_string is not None:
         try:
             episode_selectors = []
-            range_episodes = _range.split("-")
+            range_episodes = range_string.split("-")
 
-            start_episode = int(range_episodes[0])
-            final_episode = int(range_episodes[1]) + 1
+            start_episode = 1
+            final_episode = None
+
+            if len(range_episodes) == 1 or range_episodes[1] == "":
+                final_episode = int(range_episodes[0])
+
+            elif len(range_episodes) == 2:
+                start_episode = int(range_episodes[0])
+                final_episode = int(range_episodes[1])
 
             season = prompt(
                 "Select Season", 
@@ -43,10 +51,10 @@ def handle_episode(
 
             if season is None:
                 return None
-            
+
             season_episode = metadata_episodes[season]
-            
-            for episode in range(start_episode, final_episode):
+
+            for episode in range(start_episode, final_episode + 1):
                 if episode > season_episode:
                     raise Exception(
                         f"This season: {season} doesn't have that many episodes."
@@ -58,7 +66,7 @@ def handle_episode(
 
         except ValueError as e:
             mov_cli_logger.error(
-                "Incorrect episode format! This is how it's done --> '1-10' (1 being starting episode and 10 being final episode)\n" \
+                "Incorrect range format! This is how it's done --> '1-10' (1 being the starting episode and 10 being final episode)\n" \
                     f"Error: {e}"
             )
 

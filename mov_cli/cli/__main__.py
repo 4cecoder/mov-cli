@@ -40,7 +40,7 @@ def mov_cli(
         "the first nyan cat video to show up in search results."
     ), 
     limit: Optional[int] = typer.Option(None, "--limit", "-l", help = "Specify the maximum number of results"),
-    _range: Optional[str] = typer.Option(None, "--range", "-r", help = "Specify the episodes which get scraped after the download/stream finishes. E.g. {episode}:{episode} 1-5"),
+    range: Optional[str] = typer.Option(None, "--range", "-r", help = "Specify the episodes which get scraped after the download/stream finishes. E.g. {episode}:{episode} 1-5"),
 
     version: bool = typer.Option(False, "--version", help = "Display what version mov-cli is currently on."), 
     edit: bool = typer.Option(False, "--edit", "-e", help = "Opens the mov-cli config with your respective editor."), 
@@ -59,7 +59,7 @@ def mov_cli(
         fzf = (fzf, ["ui", "fzf"]), 
         preview = (preview, ["ui", "preview"]), 
         limit = (limit, ["ui", "limit"]),
-        watch_options = (False if _range else None, ["ui", "watch_options"])
+        watch_options = (False if range is not None else None, ["ui", "watch_options"])
     )
 
     if config.debug:
@@ -131,7 +131,7 @@ def mov_cli(
 
         chosen_episode = handle_episode(
             episode_string = episode,
-            _range = _range,
+            _range = range,
             scraper = chosen_scraper,
             choice = choice, 
             fzf_enabled = config.fzf_enabled,
