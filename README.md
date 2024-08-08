@@ -98,6 +98,23 @@ mov-cli -s youtube blender studio
 
 > The command above searches for `blender studio` with our [youtube](https://github.com/mov-cli/mov-cli-youtube) plugin, **however once again mov-cli is plugin based and there are many of them [in the wild](https://github.com/topics/mov-cli-plugin). 😉**
 
+## Dynamic Input Configs for mpv 🎛️
+
+mov-cli now supports dynamically loading new input configs to the user's `input.conf` file. This feature allows you to keep your current input configs and append custom ones for specific use cases.
+
+### How to Use
+
+1. Ensure you have the `mpv` player installed and set as your default player in the `config.toml` file.
+2. When you play media using mov-cli, it will automatically copy your current `input.conf` file and append custom input configs to it.
+3. The modified `input.conf` file will be used when mpv is called with the `--input-conf` option.
+
+Example:
+```sh
+mov-cli -s youtube blender studio
+```
+
+This command will search for `blender studio` using the youtube plugin, and when playing the media, it will use the modified `input.conf` file with custom input configs.
+
 ## Star Graph ⭐
 [![Star Graph Chart](https://api.star-history.com/svg?repos=mov-cli/mov-cli&type=Date)](https://star-history.com/#mov-cli/mov-cli&Date)
 

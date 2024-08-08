@@ -24,6 +24,25 @@ from ..cache import Cache
 from ..utils import what_platform, hide_ip
 from ..players import PLAYER_TABLE, CustomPlayer
 
+import shutil
+from pathlib import Path
+
+def modify_input_conf() -> str:
+    user_input_conf = Path.home() / ".config" / "mpv" / "input.conf"
+    custom_input_conf = Path.home() / ".config" / "mpv" / "custom_input.conf"
+
+    if not user_input_conf.exists():
+        mov_cli_logger.error(f"User input.conf not found at {user_input_conf}")
+        return str(user_input_conf)
+
+    shutil.copy(user_input_conf, custom_input_conf)
+
+    with custom_input_conf.open("a") as file:
+        file.write("\n# Custom input configs\n")
+        file.write("c script-message-to osc play\n")
+
+    return str(custom_input_conf)
+
 def play(media: Media, metadata: Metadata, scraper: Scraper, episode: EpisodeSelector, config: Config) -> Optional[Literal["search"]]:
     platform = what_platform()
     cache = Cache(platform)
@@ -53,7 +72,11 @@ def play(media: Media, metadata: Metadata, scraper: Scraper, episode: EpisodeSel
     )
 
     try:
-        popen = chosen_player.play(media)
+        if config.player == "mpv":
+            input_conf_path = modify_input_conf()
+            popen = chosen_player.play(media, f"--input-conf={input_conf_path}")
+        else:
+            popen = chosen_player.play(media)
 
         mov_cli_logger.debug(f"Called player with these args -> '{hide_ip(' '.join(popen.args), config.hide_ip)}'")
     except FileNotFoundError as e:
