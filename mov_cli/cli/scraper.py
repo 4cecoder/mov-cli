@@ -105,7 +105,7 @@ def select_scraper(plugins: Dict[str, str], scrapers: ScrapersConfigT, fzf_enabl
 
     return None
 
-def steal_scraper_args(query: List[str]) -> ScraperOptionsT:
+def steal_scraper_args(query: List[str]) -> Tuple[ScraperOptionsT, List[str]]:
     args_to_kidnap: List[str] = []
     arg_values_to_kidnap: List[str] = []
 
@@ -138,7 +138,9 @@ def steal_scraper_args(query: List[str]) -> ScraperOptionsT:
 
     mov_cli_logger.debug(f"Scraper args picked up on --> {scraper_options_args}")
 
-    return dict(scraper_options_args)
+    valid_scraper_args = [arg.replace("--", "").replace("-", "_") for arg in args_to_kidnap]
+
+    return dict(scraper_options_args), valid_scraper_args
 
 def get_scraper(scraper_id: str, plugins_data: PluginsDataT, user_defined_scrapers: ScrapersConfigT) -> Tuple[str, Type[Scraper] | Tuple[None, List[str]], ScraperOptionsT]:
     scraper_options = {}
@@ -172,3 +174,7 @@ def get_scraper(scraper_id: str, plugins_data: PluginsDataT, user_defined_scrape
                 return id, scraper, scraper_options
 
     return None, available_scrapers, scraper_options
+
+def validate_scraper_args(scrape_options: ScraperOptionsT, valid_scraper_args: List[str]) -> List[str]:
+    invalid_args = [arg for arg in scrape_options if arg not in valid_scraper_args]
+    return invalid_args

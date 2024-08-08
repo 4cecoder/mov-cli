@@ -14,7 +14,7 @@ from .search import search
 from .ui import welcome_msg
 from .episode import handle_episode
 from .plugins import show_all_plugins
-from .scraper import select_scraper, use_scraper, scrape, steal_scraper_args
+from .scraper import select_scraper, use_scraper, scrape, steal_scraper_args, validate_scraper_args
 from .configuration import open_config_file, set_cli_config
 
 from ..config import Config
@@ -97,9 +97,14 @@ def mov_cli(
     print(welcome_message)
 
     if query is not None:
-        scrape_options = steal_scraper_args(query) 
-        # This allows passing arguments to scrapers like this: 
-        # https://github.com/mov-cli/mov-cli-youtube/commit/b538d82745a743cd74a02530d6a3d476cd60b808#diff-4e5b064838aa74a5375265f4dfbd94024b655ee24a191290aacd3673abed921a
+        scrape_options, valid_scraper_args = steal_scraper_args(query) 
+
+        invalid_args = validate_scraper_args(scrape_options, valid_scraper_args)
+        if invalid_args:
+            mov_cli_logger.error(
+                f"Invalid scraper arguments: {', '.join(invalid_args)}. Available scraper arguments: {', '.join(valid_scraper_args)}"
+            )
+            return False
 
         query: str = " ".join(query)
 
